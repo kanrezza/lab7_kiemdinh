@@ -1,0 +1,110 @@
+{
+  "info": {
+    "name": "JSONPlaceholder API Testing",
+    "description": "Bộ kiểm thử REST API mẫu (CRUD) cho https://jsonplaceholder.typicode.com",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    { "listen": "test", "script": { "exec": [
+      "pm.test('Thời gian phản hồi < 2000ms', () => pm.expect(pm.response.responseTime).to.be.below(2000));"
+    ] } }
+  ],
+  "item": [
+    {
+      "name": "01 - GET danh sách bài viết",
+      "request": { "method": "GET", "url": "{{baseUrl}}/posts" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Status code là 200', () => pm.response.to.have.status(200));",
+        "pm.test('Content-Type là JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+        "const posts = pm.response.json();",
+        "pm.test('Trả về mảng 100 bài viết', () => { pm.expect(posts).to.be.an('array'); pm.expect(posts.length).to.eql(100); });",
+        "pm.test('Mỗi bài viết có đủ trường userId, id, title, body', () => posts.forEach(p => pm.expect(p).to.have.all.keys('userId','id','title','body')));"
+      ] } }]
+    },
+    {
+      "name": "02 - GET bài viết theo id",
+      "request": { "method": "GET", "url": "{{baseUrl}}/posts/{{postId}}" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Status code là 200', () => pm.response.to.have.status(200));",
+        "const p = pm.response.json();",
+        "pm.test('id khớp với biến postId', () => pm.expect(p.id).to.eql(Number(pm.environment.get('postId'))));",
+        "pm.test('Đúng JSON Schema', () => pm.response.to.have.jsonSchema({ type: 'object', required: ['userId','id','title','body'], properties: { userId: {type:'integer'}, id: {type:'integer'}, title: {type:'string'}, body: {type:'string'} } }));"
+      ] } }]
+    },
+    {
+      "name": "03 - GET bài viết không tồn tại (negative)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/posts/99999" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Status code là 404', () => pm.response.to.have.status(404));",
+        "pm.test('Body rỗng {}', () => pm.expect(pm.response.json()).to.eql({}));"
+      ] } }]
+    },
+    {
+      "name": "04 - GET bình luận lọc theo postId (query params)",
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/comments?postId={{postId}}", "host": ["{{baseUrl}}"], "path": ["comments"], "query": [{ "key": "postId", "value": "{{postId}}" }] } },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Status code là 200', () => pm.response.to.have.status(200));",
+        "const list = pm.response.json();",
+        "pm.test('Có ít nhất 1 bình luận', () => pm.expect(list.length).to.be.above(0));",
+        "pm.test('Tất cả bình luận thuộc đúng postId', () => list.forEach(c => pm.expect(c.postId).to.eql(Number(pm.environment.get('postId')))));",
+        "pm.test('Email đúng định dạng', () => list.forEach(c => pm.expect(c.email).to.match(/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/)));"
+      ] } }]
+    },
+    {
+      "name": "05 - POST tạo bài viết mới",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json; charset=UTF-8" }],
+        "url": "{{baseUrl}}/posts",
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"{{newTitle}}\",\n  \"body\": \"Bài viết được tạo bởi Postman\",\n  \"userId\": 1\n}" }
+      },
+      "event": [
+        { "listen": "prerequest", "script": { "exec": [
+          "pm.environment.set('newTitle', 'Postman test ' + Date.now());"
+        ] } },
+        { "listen": "test", "script": { "exec": [
+          "pm.test('Status code là 201 Created', () => pm.response.to.have.status(201));",
+          "const p = pm.response.json();",
+          "pm.test('Dữ liệu trả về khớp dữ liệu gửi đi', () => { pm.expect(p.title).to.eql(pm.environment.get('newTitle')); pm.expect(p.userId).to.eql(1); });",
+          "pm.test('Server sinh id mới = 101', () => pm.expect(p.id).to.eql(101));",
+          "pm.environment.set('createdId', p.id);"
+        ] } }
+      ]
+    },
+    {
+      "name": "06 - PUT cập nhật toàn bộ bài viết",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json; charset=UTF-8" }],
+        "url": "{{baseUrl}}/posts/{{postId}}",
+        "body": { "mode": "raw", "raw": "{\n  \"id\": {{postId}},\n  \"title\": \"Tiêu đề đã sửa\",\n  \"body\": \"Nội dung đã sửa\",\n  \"userId\": 1\n}" }
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Status code là 200', () => pm.response.to.have.status(200));",
+        "pm.test('Tiêu đề đã được cập nhật', () => pm.expect(pm.response.json().title).to.eql('Tiêu đề đã sửa'));"
+      ] } }]
+    },
+    {
+      "name": "07 - PATCH cập nhật một phần",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json; charset=UTF-8" }],
+        "url": "{{baseUrl}}/posts/{{postId}}",
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Chỉ sửa tiêu đề\"\n}" }
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Status code là 200', () => pm.response.to.have.status(200));",
+        "const p = pm.response.json();",
+        "pm.test('Chỉ title thay đổi, các trường khác giữ nguyên', () => { pm.expect(p.title).to.eql('Chỉ sửa tiêu đề'); pm.expect(p).to.have.property('body'); pm.expect(p.userId).to.eql(1); });"
+      ] } }]
+    },
+    {
+      "name": "08 - DELETE xoá bài viết",
+      "request": { "method": "DELETE", "url": "{{baseUrl}}/posts/{{postId}}" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Status code là 200', () => pm.response.to.have.status(200));",
+        "pm.test('Body trả về rỗng', () => pm.expect(pm.response.json()).to.eql({}));"
+      ] } }]
+    }
+  ]
+}

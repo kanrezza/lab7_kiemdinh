@@ -1,0 +1,77 @@
+newman
+
+JSONPlaceholder API Testing
+
+→ 01 - GET danh sách bài viết
+  GET https://jsonplaceholder.typicode.com/posts [200 OK, 28.48kB, 244ms]
+  ✓  Thời gian phản hồi < 2000ms
+  ✓  Status code là 200
+  ✓  Content-Type là JSON
+  ✓  Trả về mảng 100 bài viết
+  ✓  Mỗi bài viết có đủ trường userId, id, title, body
+
+→ 02 - GET bài viết theo id
+  GET https://jsonplaceholder.typicode.com/posts/1 [200 OK, 1.25kB, 69ms]
+  ✓  Thời gian phản hồi < 2000ms
+  ✓  Status code là 200
+  ✓  id khớp với biến postId
+  ✓  Đúng JSON Schema
+
+→ 03 - GET bài viết không tồn tại (negative)
+  GET https://jsonplaceholder.typicode.com/posts/99999 [404 Not Found, 933B, 75ms]
+  ✓  Thời gian phản hồi < 2000ms
+  ✓  Status code là 404
+  ✓  Body rỗng {}
+
+→ 04 - GET bình luận lọc theo postId (query params)
+  GET https://jsonplaceholder.typicode.com/comments?postId=1 [200 OK, 2.46kB, 74ms]
+  ✓  Thời gian phản hồi < 2000ms
+  ✓  Status code là 200
+  ✓  Có ít nhất 1 bình luận
+  ✓  Tất cả bình luận thuộc đúng postId
+  ✓  Email đúng định dạng
+
+→ 05 - POST tạo bài viết mới
+  POST https://jsonplaceholder.typicode.com/posts [201 Created, 1.16kB, 805ms]
+  ✓  Thời gian phản hồi < 2000ms
+  ✓  Status code là 201 Created
+  ✓  Dữ liệu trả về khớp dữ liệu gửi đi
+  ✓  Server sinh id mới = 101
+
+→ 06 - PUT cập nhật toàn bộ bài viết
+  PUT https://jsonplaceholder.typicode.com/posts/1 [200 OK, 1.04kB, 822ms]
+  ✓  Thời gian phản hồi < 2000ms
+  ✓  Status code là 200
+  ✓  Tiêu đề đã được cập nhật
+
+→ 07 - PATCH cập nhật một phần
+  PATCH https://jsonplaceholder.typicode.com/posts/1 [200 OK, 1.18kB, 324ms]
+  ✓  Thời gian phản hồi < 2000ms
+  ✓  Status code là 200
+  ✓  Chỉ title thay đổi, các trường khác giữ nguyên
+
+→ 08 - DELETE xoá bài viết
+  DELETE https://jsonplaceholder.typicode.com/posts/1 [200 OK, 906B, 318ms]
+  ✓  Thời gian phản hồi < 2000ms
+  ✓  Status code là 200
+  ✓  Body trả về rỗng
+
+┌─────────────────────────┬────────────────────┬────────────────────┐
+│                         │           executed │             failed │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│              iterations │                  1 │                  0 │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│                requests │                  8 │                  0 │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│            test-scripts │                 16 │                  0 │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│      prerequest-scripts │                  1 │                  0 │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│              assertions │                 30 │                  0 │
+├─────────────────────────┴────────────────────┴────────────────────┤
+│ total run duration: 2.9s                                          │
+├───────────────────────────────────────────────────────────────────┤
+│ total data received: 29.79kB (approx)                             │
+├───────────────────────────────────────────────────────────────────┤
+│ average response time: 341ms [min: 69ms, max: 822ms, s.d.: 290ms] │
+└───────────────────────────────────────────────────────────────────┘
